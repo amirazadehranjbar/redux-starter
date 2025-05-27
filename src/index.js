@@ -1,7 +1,7 @@
 const { store } = require("./app/store");
-const {projectActions} = require("./features/projects/projectReducer");
-const { selectUnsolvedBugs } = require("./features/bugs/bugSelectors");
-const {bugActions} = require("./features/bugs/bugReducer");
+const {projectActions} = require("./features/entities/projects/projectReducer");
+const { selectUnsolvedBugs } = require("./features/entities/bugs/bugSelectors");
+const {bugActions} = require("./features/entities/bugs/bugReducer");
 
 // add projects
 store.dispatch(projectActions.addProject({projectName:"project 1" , progress:10}));

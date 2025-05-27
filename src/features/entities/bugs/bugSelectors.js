@@ -4,7 +4,7 @@ const { createSelector } = require("reselect");
 /**
  * Get all bugs from the state
  */
-const selectBugs = state => state.entities.bugs;
+const selectBugs = state => state.bugs;
 
 /**
  * Get only unsolved bugs (memoized)

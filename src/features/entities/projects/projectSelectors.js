@@ -1,7 +1,7 @@
 const {createSelector} = require("reselect");
 
 // get projects state
-const projectState = state => state.entities.projects;
+const projectState = state => state.projects;
 
 //
 const getProgressed = createSelector(

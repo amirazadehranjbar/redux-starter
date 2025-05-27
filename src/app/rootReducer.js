@@ -1,8 +1,12 @@
 const {combineReducers} = require("redux");
-const entitiesReducer = require("../features/entitiesReducer");
+const userReducer = require("../features/users/usersReducer");
+const {bugReducer} = require("../features/entities/bugs/bugReducer");
+const {projectReducer} = require("../features/entities/projects/projectReducer");
 
 const RootReducer = combineReducers({
-    entities:entitiesReducer,
+    bugs:bugReducer,
+    projects:projectReducer,
+    user:userReducer,
 
 });
 

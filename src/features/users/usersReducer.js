@@ -15,7 +15,7 @@ const usersReducer = createSlice(
 
                id:++userID,
                userName: action.payload.userName,
-               bugIDs:action.payload.bugIDs | 0,
+               userUploadedBugsIDs:action.payload.userUploadedBugsIDs | 0,
 
             })
 
