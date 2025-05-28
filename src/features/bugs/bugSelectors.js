@@ -1,20 +1,14 @@
-// src/features/bugs/bugSelectors.js
 const { createSelector } = require("reselect");
 
-/**
- * Get all bugs from the state
- */
+// Select the bugs state
 const selectBugs = state => state.bugs;
 
-/**
- * Get only unsolved bugs (memoized)
- */
+// Return only unsolved bugs
 const selectUnsolvedBugs = createSelector(
     [selectBugs],
     bugs => bugs.filter(bug => !bug.solved)
 );
 
-// export
 module.exports = {
     selectUnsolvedBugs,
 };

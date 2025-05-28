@@ -1,0 +1,232 @@
+// src/app/rootReducer.js
+const {combineReducers} = require("redux");
+const {usersReducer } = require("../features/users/userReducer");
+const {bugReducer} = require("../features/bugs/bugReducer");
+const {projectReducer} = require("../features/projects/projectReducer");
+
+const RootReducer = combineReducers({
+    bugs:bugReducer,
+    projects:projectReducer,
+    users:usersReducer ,
+
+});
+
+module.exports = {RootReducer};
+////////////////////////////////////////////////////////////////////////////////////////////////
+// src/app/store.js
+const { configureStore } = require("@reduxjs/toolkit");
+const {RootReducer} = require("./rootReducer");
+
+const store = configureStore({ reducer: RootReducer });
+
+module.exports = { store };
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// src/features/bugs/bugReducer.js
+const {createSlice} = require("@reduxjs/toolkit");
+
+
+let id = 0;
+
+const bugReducer = createSlice({
+    name: "bugs", initialState: [], reducers: {
+
+
+        addBug: (state, action) => {
+            state.push({
+                id: ++id, description: action.payload.description, solved: false
+            });
+        },
+
+        removeBug: (state, action) => {
+            state.filter(bug => bug.id !== action.payload.id);
+        },
+
+
+        updateBug: (state, action) => {
+            const bug = state.find(bug => bug.id === action.payload.id);
+            if (bug) {
+                bug.solved = action.payload.solvedValue;
+            }
+        }
+
+    },
+});
+
+
+module.exports = {
+    bugReducer: bugReducer.reducer,
+    bugActions: bugReducer.actions,
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// src/features/bugs/bugSelectors.js
+// src/features/bugs/bugSelectors.js
+const { createSelector } = require("reselect");
+
+const selectBugs = state => state.bugs;
+
+const selectUnsolvedBugs = createSelector(
+    [selectBugs],
+    bugs => bugs.filter(bug => !bug.solved)
+);
+
+// export
+module.exports = {
+    selectUnsolvedBugs,
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// src/features/projects/projectReducer.js
+const {createSlice} = require("@reduxjs/toolkit");
+
+let projectID = 0;
+
+const ProjectReducer = createSlice({
+
+    name: "projects",
+    initialState: [],
+
+    reducers: {
+
+        // add project
+        addProject: (state, action) => {
+            state.push({
+                id: ++projectID,
+                projectName: action.payload.projectName,
+                progress:0
+            });
+        },
+
+        // update
+    }
+});
+
+module.exports = {
+
+    projectReducer: ProjectReducer.reducer,
+    projectActions: ProjectReducer.actions,
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// src/features/projects/projectSelectors.js
+
+const {createSelector} = require("reselect");
+
+// get projects state
+const projectState = state => state.projects;
+
+//
+const getProgressed = createSelector(
+    [projectState],
+    projects => projects.filter(project => project.progress >=50)
+)
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// src/features/users/userReducer.js
+
+const {createSlice} = require("@reduxjs/toolkit");
+
+let userID = 0;
+
+const initialState = [];
+
+
+const userReducer = createSlice(
+    {
+        name: "users",
+        initialState: initialState,
+        reducers: {
+
+            //➕ add user
+            userAdd: (users, action) => {
+                users.push({
+                    userID: ++userID,
+                    userName: action.payload.userName,
+                    userUploadedBugsIDs: [action.payload.userUploadedBugsIDs || 0],
+                })
+            },
+
+            // ➕ add new bug to user
+            addBug: (state, action) => {
+                const { userID, userUploadedBugsIDs } = action.payload;
+                const user = state.find(user => user.userID === userID);
+                if (user) {
+                    user.userUploadedBugsIDs.push(userUploadedBugsIDs);
+                }
+            }
+
+
+        }
+    }
+);
+
+module.exports = {
+    usersReducer: userReducer.reducer,
+    usersActions: userReducer.actions,
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// src/features/users/userSelectors.js
+const {createSelector} = require("reselect");
+
+
+const users = state => state.users;
+
+const getBugsByUser = createSelector(
+
+    [users],
+
+    (users , action) =>{
+        const targetUser = users.find(user=>user.id === action.payload.id);
+        if(targetUser){
+            return targetUser.bugs;
+        }
+    }
+);
+
+module.exports={
+    getBugsByUser,
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// src/index.js
+
+const { store } = require("./app/store");
+// import actions
+const {bugActions} = require("./features/bugs/bugReducer");
+const {usersActions}=require("./features/users/userReducer");
+const {projectActions} = require("./features/projects/projectReducer");
+// import selectors
+const { selectUnsolvedBugs } = require("./features/bugs/bugSelectors");
+const {getBugsByUser}=require("./features/users/userSelectors")
+
+
+// add projects
+store.dispatch(projectActions.addProject({projectName:"project 1" , progress:10}));
+store.dispatch(projectActions.addProject({projectName:"project 2", progress:20}));
+store.dispatch(projectActions.addProject({projectName:"project 3", progress:30}));
+
+// add bugs
+store.dispatch(bugActions.addBug({description:"bug 1"}));
+store.dispatch(bugActions.addBug({description:"bug 2"}));
+store.dispatch(bugActions.addBug({description:"bug 3"}));
+
+store.dispatch(bugActions.updateBug({id:2 , solvedValue:true}));
+
+// update bug solving using selector
+selectUnsolvedBugs(store.getState());
+
+// add user
+store.dispatch(usersActions.userAdd({userName:"amir",userUploadedBugsIDs:2}));
+store.dispatch(usersActions.userAdd({userName:"reza",userUploadedBugsIDs:1}));
+store.dispatch(usersActions.userAdd({userName:"nima",userUploadedBugsIDs:3}));
+
+
+store.dispatch(usersActions.addBug({userID:1 , userUploadedBugsIDs:1}));
+getBugsByUser({id:1});
+
+
+console.log(store.getState())
+
+
