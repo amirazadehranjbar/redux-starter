@@ -9,6 +9,7 @@ const ProjectReducer = createSlice({
 
     reducers: {
 
+        // add project
         addProject: (state, action) => {
             state.push({
                 id: ++projectID,
@@ -16,6 +17,8 @@ const ProjectReducer = createSlice({
                 progress:0
             });
         },
+
+        // update
     }
 });
 

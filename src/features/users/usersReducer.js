@@ -1,29 +1,40 @@
-const {createSlice} =require("@reduxjs/toolkit");
+const {createSlice} = require("@reduxjs/toolkit");
 
 let userID = 0;
 
-const initialState =[];
+const initialState = [];
 
 
 const usersReducer = createSlice(
     {
-        name:"users",
-        initialState:initialState,
-        reducers:{
+        name: "users",
+        initialState: initialState,
+        reducers: {
 
-            userAdd:(state , action)=>({
+            //➕ add user
+            userAdd: (users, action) => {
+                users.push({
+                    userID: ++userID,
+                    userName: action.payload.userName,
+                    userUploadedBugsIDs: [action.payload.userUploadedBugsIDs || 0],
+                })
+            },
 
-               id:++userID,
-               userName: action.payload.userName,
-               userUploadedBugsIDs:action.payload.userUploadedBugsIDs | 0,
+            // ➕ add new bug to user
+            addBug: (state, action) => {
+                const { userID, userUploadedBugsIDs } = action.payload;
+                const user = state.find(user => user.userID === userID);
+                if (user) {
+                    user.userUploadedBugsIDs.push(userUploadedBugsIDs);
+                }
+            }
 
-            })
 
         }
     }
 );
 
 module.exports = {
-    usersReducer:usersReducer.reducer,
-    usersActions:usersReducer.actions,
+    usersReducer: usersReducer.reducer,
+    usersActions: usersReducer.actions,
 }
