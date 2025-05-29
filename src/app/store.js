@@ -1,11 +1,14 @@
 const { configureStore } = require("@reduxjs/toolkit");
 const { RootReducer } = require("./rootReducer");
-const Logger = require("../middleware/logger");
+const logger = require("../middleware/logger");
 
-// Create the Redux store and add middleware (including custom Logger)
 const store = configureStore({
     reducer: RootReducer,
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(Logger),
+    middleware: (getDefaultMiddleware) => {
+        const defaults = getDefaultMiddleware();
+        console.log("🔍 Default Middleware List:", defaults); // <-- log here
+        return defaults.concat(logger);
+    },
 });
 
 module.exports = { store };

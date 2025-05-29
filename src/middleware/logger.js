@@ -1,8 +1,12 @@
-const Logger = storeAPI => next => action => {
-    console.log("[Logger] Dispatching action:", action);
-    const result = next(action); // Pass action to the next middleware or reducer
-    console.log("[Logger] Next state:", storeAPI.getState());
-    return result;
-};
-
-module.exports = Logger;
+/**
+ * Logs all actions and states after they are dispatched.
+ */
+const logger = store => next => action => {
+    console.group(action.type)
+    console.info('dispatching', action)
+    let result = next(action)
+    console.log('next state', store.getState())
+    console.groupEnd()
+    return result
+}
+module.exports = logger;

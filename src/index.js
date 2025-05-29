@@ -41,5 +41,6 @@ const userNameSelector = getUserNameByID(2);
 const userName = userNameSelector(store.getState());
 
 ///////////////////////////////////////////// 🏴 log results 🏴 ////////////////////////////////////////////////////////
-console.log("User bugs 🐛🐛🐛:", userBugs);
-console.log(`User Name : ${userName}`);
+// console.log("User bugs 🐛🐛🐛:", userBugs);
+// console.log(`User Name : ${userName}`);
+
