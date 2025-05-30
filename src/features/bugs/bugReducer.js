@@ -4,11 +4,15 @@ let id = 0; // local bug ID counter
 
 const bugReducer = createSlice({
     name: "bugs",
-    initialState: [],
+    initialState: {
+        list:[],
+        isLoading:false,
+        lastFetch:null
+    },
     reducers: {
         // Adds a new bug
-        addBug: (state, action) => {
-            state.push({
+        addBug: (bugs, action) => {
+            bugs.list.push({
                 id: ++id,
                 description: action.payload.description,
                 solved: false
@@ -16,13 +20,13 @@ const bugReducer = createSlice({
         },
 
         // Intended to remove a bug (but does not mutate state properly)
-        removeBug: (state, action) => {
-            return state.filter(bug => bug.id !== action.payload.id); // fixed: return new array
+        removeBug: (bugs, action) => {
+            return bugs.list.filter(bug => bug.id !== action.payload.id); // fixed: return new array
         },
 
         // Updates a bug's solved status
-        updateBug: (state, action) => {
-            const bug = state.find(bug => bug.id === action.payload.id);
+        updateBug: (bugs, action) => {
+            const bug = bugs.list.find(bug => bug.id === action.payload.id);
             if (bug) {
                 bug.solved = action.payload.solvedValue;
             }
