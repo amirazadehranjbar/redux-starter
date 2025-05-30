@@ -9,7 +9,7 @@ const getBugsByUser = (targetUserID) => createSelector( // تغییر نام پ�
     (allUsers, allBugs) => {
         const targetUser = allUsers.find(user => user.userID === targetUserID); // استفاده از targetUserID
         if (!targetUser) return [];
-        return allBugs.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
+        return allBugs.list.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
     }
 );
 

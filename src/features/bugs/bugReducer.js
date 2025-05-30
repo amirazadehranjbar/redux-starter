@@ -21,7 +21,7 @@ const bugReducer = createSlice({
 
         // Intended to remove a bug (but does not mutate state properly)
         removeBug: (bugs, action) => {
-            return bugs.list.filter(bug => bug.id !== action.payload.id); // fixed: return new array
+            bugs.list = bugs.list.filter(bug => bug.id !== action.payload.id);
         },
 
         // Updates a bug's solved status

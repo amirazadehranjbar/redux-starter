@@ -1,6 +1,4 @@
-/**
- * Logs all actions and states after they are dispatched.
- */
+// src/middleware/logger.js
 const logger = store => next => action => {
     console.group(action.type)
     console.info('dispatching', action)
