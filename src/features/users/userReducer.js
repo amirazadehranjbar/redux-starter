@@ -12,16 +12,16 @@ const userReducer = createSlice({
             users.push({
                 userID: ++userID,
                 userName: action.payload.userName,
-                userUploadedBugsIDs: [action.payload.userUploadedBugsIDs || 0],
+                userUploadedBugsIDs: [], // مقداردهی اولیه به عنوان یک آرایه خالی
             });
         },
 
         // Add a bug to an existing user by ID
-        addBug: (state, action) => {
-            const { userID, userUploadedBugsIDs } = action.payload;
-            const user = state.find(user => user.userID === userID);
+        addBug: (users, action) => {
+            const { userID, bugID } = action.payload; // تغییر نام به bugID برای وضوح بیشتر
+            const user = users.find(user => user.userID === userID);
             if (user) {
-                user.userUploadedBugsIDs.push(userUploadedBugsIDs);
+                user.userUploadedBugsIDs.push(bugID); // اضافه کردن bugID به آرایه
             }
         }
     }

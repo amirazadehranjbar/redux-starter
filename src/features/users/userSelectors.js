@@ -4,20 +4,20 @@ const users = state => state.users;
 const bugs = state => state.bugs;
 
 // Select bugs that were uploaded by a given user
-const getBugsByUser = (userID) => createSelector(
+const getBugsByUser = (targetUserID) => createSelector( // تغییر نام پارامتر برای وضوح بیشتر
     [users, bugs],
-    (users, bugs) => {
-        const targetUser = users.find(user => user.userID === userID);
+    (allUsers, allBugs) => {
+        const targetUser = allUsers.find(user => user.userID === targetUserID); // استفاده از targetUserID
         if (!targetUser) return [];
-        return bugs.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
+        return allBugs.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
     }
 );
 
 // Return userName by userID
-const getUserNameByID = (userID) => createSelector(
+const getUserNameByID = (targetUserID) => createSelector( // تغییر نام پارامتر برای وضوح بیشتر
     [users],
-    (users) => {
-        const foundedUser = users.find(user => user.userID === userID);
+    (allUsers) => {
+        const foundedUser = allUsers.find(user => user.userID === targetUserID); // استفاده از targetUserID
         return foundedUser ? foundedUser.userName : "user not found";
     }
 );
