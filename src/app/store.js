@@ -1,14 +1,14 @@
 const {configureStore} = require("@reduxjs/toolkit");
 const {RootReducer} = require("./rootReducer");
-const logger = require("../middleware/logger");
-const api = require("../middleware/api");
+const logger = require("../middleware/loggerMiddleware");
+const apiMiddleware = require("../middleware/apiMiddleware");
 
 const store = configureStore({
     reducer: RootReducer,
     middleware: (getDefaultMiddleware) => {
         const defaults = getDefaultMiddleware();
 
-        return defaults.concat(logger, api);
+        return defaults.concat(logger, apiMiddleware);
     },
 });
 

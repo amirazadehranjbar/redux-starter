@@ -1,3 +1,31 @@
+// src/actions/apiActions.js
+const {createAction} = require("@reduxjs/toolkit");
+const {bugActions} = require("../features/bugs/bugReducer")
+
+const apiCallBegan = createAction("api/callBegan");
+const apiCallSuccess = createAction("api/callSuccess");
+const apiCallFailed = createAction("api/callFailed");
+
+// action creators
+
+const url = "/bugs";
+const loadBugs = ()=>apiCallBegan(
+    {
+        url,
+        onSuccess: bugActions.bugReceived.type,
+    }
+)
+
+module.exports={
+    apiCallBegan,
+    apiCallSuccess,
+    apiCallFailed,
+
+    loadBugs,
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////
 // src/app/rootReducer.js
 const {combineReducers} = require("redux");
 const {usersReducer } = require("../features/users/userReducer");
@@ -15,21 +43,22 @@ module.exports = { RootReducer };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // src/app/store.js
-const { configureStore } = require("@reduxjs/toolkit");
-const { RootReducer } = require("./rootReducer");
-const logger = require("../middleware/logger");
-const api = require("../middleware/api");
+const {configureStore} = require("@reduxjs/toolkit");
+const {RootReducer} = require("./rootReducer");
+const logger = require("../middleware/loggerMiddleware");
+const apiMiddleware = require("../middleware/apiMiddleware");
 
 const store = configureStore({
     reducer: RootReducer,
     middleware: (getDefaultMiddleware) => {
         const defaults = getDefaultMiddleware();
 
-        return defaults.concat(logger , api);
+        return defaults.concat(logger, apiMiddleware);
     },
 });
 
-module.exports = { store };
+module.exports = {store};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // src/features/bugs/bugReducer.js
 const { createSlice } = require("@reduxjs/toolkit");
@@ -65,18 +94,19 @@ const bugReducer = createSlice({
                 bug.solved = action.payload.solvedValue;
             }
         },
-      // api management
-      bugRequested: (bugs, action) => {
-    bugs.isLoading = true;
-},
-bugReceived: (bugs, action) => {
-    bugs.list = action.payload;
-    bugs.isLoading = false;
-    bugs.lastFetch = Date.now();
-},
-bugRequestFailed: (bugs, action) => {
-    bugs.isLoading = false;
-}
+
+        // api
+        bugRequested: (bugs, action) => {
+            bugs.isLoading = true;
+        },
+        bugReceived: (bugs, action) => {
+            bugs.list = action.payload;
+            bugs.isLoading = false;
+            bugs.lastFetch = Date.now();
+        },
+        bugRequestFailed: (bugs, action) => {
+            bugs.isLoading = false;
+        }
 
     },
 });
@@ -85,6 +115,7 @@ module.exports = {
     bugReducer: bugReducer.reducer,
     bugActions: bugReducer.actions,
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // src/features/bugs/bugSelectors.js
@@ -209,89 +240,46 @@ module.exports = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// src/middleware/api.js
+// src/middleware/apiMiddleware.js
 const axios = require("axios");
+const {apiCallBegan, apiCallSuccess, apiCallFailed} = require("../actions/apiActions");
 
-const api = store => next => async action => {
-    if (action.type !== "bugs/bugsRequested") return next(action);
+const apiMiddleware = store => next => async action => {
+    if (action.type !== apiCallBegan.type) return next(action);
 
-    next(action); // dispatch bugsRequested
+    next(action);
+
+    const {url, method = "get", data, onSuccess, onError} = action.payload;
 
     try {
-        const response = await axios.get("http://localhost:9001/api/bugs");
-        store.dispatch({ type: "bugs/bugReceived", payload: response.data });
+        const response = await axios.request({
+            baseURL: "http://localhost:9001/api",
+            url,
+            method,
+            data
+        });
+
+        // general success
+        store.dispatch(apiCallSuccess(response.data));
+        // select
+        if (onSuccess) store.dispatch({type: onSuccess, payload: response.data});
+
     } catch (e) {
-        store.dispatch({ type: "bugs/bugRequestFailed", payload: e.message });
+        // general errors
+        store.dispatch(apiCallFailed(e));
+        // select
+        if (onError) store.dispatch({type: onError, payload: e.message ?? e});
     }
 };
 
-module.exports = api;
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// src/middleware/logger.js
-const logger = store => next => action => {
-    console.group(action.type)
-    console.info('dispatching', action)
-    let result = next(action)
-    console.log('next state', store.getState())
-    console.groupEnd()
-    return result
-}
-module.exports = logger;
-
+module.exports = apiMiddleware;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // src/index.js
 const { store } = require("./app/store");
-const { bugActions } = require("./features/bugs/bugReducer");
-const { usersActions } = require("./features/users/userReducer");
-const { projectActions } = require("./features/projects/projectReducer");
-const { selectUnsolvedBugs } = require("./features/bugs/bugSelectors");
-const { getBugsByUser, getUserNameByID } = require("./features/users/userSelectors");
+const {loadBugs} = require("./actions/apiActions");
 
-////////////////////////////////////////////////////////// ⚒️Project⚒️ /////////////////////////////////////////////
-// Dispatch some project actions
-store.dispatch(projectActions.addProject({ projectName: "project 1", progress: 10 }));
-store.dispatch(projectActions.addProject({ projectName: "project 2", progress: 20 }));
-store.dispatch(projectActions.addProject({ projectName: "project 3", progress: 30 }));
+store.dispatch(loadBugs());
 
-////////////////////////////////////////////////////////// 🐛Bug🐛 /////////////////////////////////////////////
-// Dispatch some bug actions
-store.dispatch(bugActions.addBug({ description: "bug 1" })); // Bug ID 1
-store.dispatch(bugActions.addBug({ description: "bug 2" })); // Bug ID 2
-store.dispatch(bugActions.addBug({ description: "bug 3" })); // Bug ID 3
-
-// Update the 'solved' status of a bug
-store.dispatch(bugActions.updateBug({ id: 2, solvedValue: true }));
-
-// Run selector to retrieve unsolved bugs (but not logged here)
-selectUnsolvedBugs(store.getState());
-
-////////////////////////////////////////////////////////// 🧔User🧔 /////////////////////////////////////////////
-// Dispatch some user actions
-store.dispatch(usersActions.userAdd({ userName: "amir" }));
-store.dispatch(usersActions.userAdd({ userName: "reza" }));
-store.dispatch(usersActions.userAdd({ userName: "nima" }));
-
-// Add bugs to users
-store.dispatch(usersActions.addBug({ userID: 1, bugID: 1 }));
-store.dispatch(usersActions.addBug({ userID: 1, bugID: 3 }));
-store.dispatch(usersActions.addBug({ userID: 2, bugID: 2 }));
-
-// Use selectors to get bugs and username by userID
-const userBugsSelector = getBugsByUser(1);
-const userBugs = userBugsSelector(store.getState());
-
-const userNameSelector = getUserNameByID(2);
-const userName = userNameSelector(store.getState());
-
-///////////////////////////////////////////                      ////////////////////////////////////////////////////////
-store.dispatch({ type: "bugs/bugsRequested" });
-
-
-///////////////////////////////////////////// 🏴 log results 🏴 ////////////////////////////////////////////////////////
-console.log("User bugs 🐛🐛🐛:", userBugs);
-console.log(`User Name : ${userName}`);
 console.log(store.getState());
 
 /////////////////////*************************** Backend *********************************////////////////////////////////

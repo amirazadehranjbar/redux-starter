@@ -1,3 +1,4 @@
+// src/features/bugs/bugReducer.js
 const { createSlice } = require("@reduxjs/toolkit");
 
 let id = 0; // local bug ID counter

@@ -1,5 +1,5 @@
-// src/middleware/logger.js
-const logger = store => next => action => {
+// src/middleware/loggerMiddleware.js
+const loggerMiddleware = store => next => action => {
     console.group(action.type)
     console.info('dispatching', action)
     let result = next(action)
@@ -7,4 +7,4 @@ const logger = store => next => action => {
     console.groupEnd()
     return result
 }
-module.exports = logger;
+module.exports = loggerMiddleware;
