@@ -10,7 +10,7 @@ module.exports = {
     static: {
       directory: path.join(__dirname, "dist"),
     },
-    port: 8001
+    port: 8000
   },
   mode: "development"
 };

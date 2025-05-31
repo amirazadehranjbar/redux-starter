@@ -30,7 +30,21 @@ const bugReducer = createSlice({
             if (bug) {
                 bug.solved = action.payload.solvedValue;
             }
+        },
+
+        // api
+        bugRequested: (bugs, action) => {
+            bugs.isLoading = true;
+        },
+        bugReceived: (bugs, action) => {
+            bugs.list = action.payload;
+            bugs.isLoading = false;
+            bugs.lastFetch = Date.now();
+        },
+        bugRequestFailed: (bugs, action) => {
+            bugs.isLoading = false;
         }
+
     },
 });
 

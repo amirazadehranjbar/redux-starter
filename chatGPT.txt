@@ -55,7 +55,7 @@ const bugReducer = createSlice({
 
         // Intended to remove a bug (but does not mutate state properly)
         removeBug: (bugs, action) => {
-            return bugs.list.filter(bug => bug.id !== action.payload.id); // fixed: return new array
+            bugs.list = bugs.list.filter(bug => bug.id !== action.payload.id);
         },
 
         // Updates a bug's solved status
@@ -64,7 +64,20 @@ const bugReducer = createSlice({
             if (bug) {
                 bug.solved = action.payload.solvedValue;
             }
-        }
+        },
+      // api management
+      bugRequested: (bugs, action) => {
+    bugs.isLoading = true;
+},
+bugReceived: (bugs, action) => {
+    bugs.list = action.payload;
+    bugs.isLoading = false;
+    bugs.lastFetch = Date.now();
+},
+bugRequestFailed: (bugs, action) => {
+    bugs.isLoading = false;
+}
+
     },
 });
 
@@ -83,7 +96,7 @@ const selectBugs = state => state.bugs;
 // Return only unsolved bugs
 const selectUnsolvedBugs = createSelector(
     [selectBugs],
-    bugs => bugs.list.filter(bug => !bug.solved)
+    bugs => (bugs.list || []).filter(bug => !bug.solved)
 );
 
 module.exports = {
@@ -177,7 +190,7 @@ const getBugsByUser = (targetUserID) => createSelector(
     (allUsers, allBugs) => {
         const targetUser = allUsers.find(user => user.userID === targetUserID);
         if (!targetUser) return [];
-        return allBugs.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
+        return allBugs.list.filter(bug => targetUser.userUploadedBugsIDs.includes(bug.id));
     }
 );
 
@@ -197,11 +210,23 @@ module.exports = {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // src/middleware/api.js
-const api = state=>next=>action=>{
+const axios = require("axios");
 
+const api = store => next => async action => {
+    if (action.type !== "bugs/bugsRequested") return next(action);
+
+    next(action); // dispatch bugsRequested
+
+    try {
+        const response = await axios.get("http://localhost:9001/api/bugs");
+        store.dispatch({ type: "bugs/bugReceived", payload: response.data });
+    } catch (e) {
+        store.dispatch({ type: "bugs/bugRequestFailed", payload: e.message });
+    }
 };
 
 module.exports = api;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // src/middleware/logger.js
@@ -260,7 +285,54 @@ const userBugs = userBugsSelector(store.getState());
 const userNameSelector = getUserNameByID(2);
 const userName = userNameSelector(store.getState());
 
+///////////////////////////////////////////                      ////////////////////////////////////////////////////////
+store.dispatch({ type: "bugs/bugsRequested" });
+
+
 ///////////////////////////////////////////// 🏴 log results 🏴 ////////////////////////////////////////////////////////
 console.log("User bugs 🐛🐛🐛:", userBugs);
 console.log(`User Name : ${userName}`);
 console.log(store.getState());
+
+/////////////////////*************************** Backend *********************************////////////////////////////////
+////////////////////////////////////// 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 ///////////////////////////////////////
+// index.js
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+const cors = require("cors");
+
+app.use(cors());
+app.use(bodyParser.json());
+
+const bugs = [
+  { id: 1, description: "Bug 1", userId: 1, resolved: true },
+  { id: 2, description: "Bug 2", userId: 1 },
+  { id: 3, description: "Bug 3", userId: 2 },
+  { id: 4, description: "Bug 4" }
+];
+
+app.get("/api/bugs", (req, res) => {
+  res.json(bugs);
+});
+
+app.post("/api/bugs", (req, res) => {
+  const bug = { id: Date.now(), resolved: false, ...req.body };
+  bugs.push(bug);
+
+  res.json(bug);
+});
+
+app.patch("/api/bugs/:id", (req, res) => {
+  const index = bugs.findIndex(bug => bug.id === parseInt(req.params.id));
+  const bug = bugs[index];
+  if ("resolved" in req.body) bug.resolved = req.body.resolved;
+  if ("userId" in req.body) bug.userId = req.body.userId;
+
+  res.json(bug);
+});
+
+app.listen(9001, () => {
+  console.log("Node server started on port 9001.");
+});
+
