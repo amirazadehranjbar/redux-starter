@@ -4,4 +4,4 @@ const {loadBugs} = require("./actions/apiActions");
 
 store.dispatch(loadBugs());
 
-console.log(store.getState());
+setTimeout(()=>{store.dispatch(loadBugs())},2000);

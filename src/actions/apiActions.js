@@ -9,13 +9,36 @@ const apiCallFailed = createAction("api/callFailed");
 // action creators
 
 const url = "/bugs";
-const loadBugs = ()=>apiCallBegan(
-    {
-        url,
-        onSuccess: bugActions.bugReceived.type,
-    }
-)
 
+// get bug from server
+const loadBugs = () => (dispatch, getState) => {
+    const { lastFetch } = getState().bugs;
+
+
+    const diffInMinutes = Date.now() - lastFetch;
+    if (diffInMinutes < 10 * 60 * 1000) return;
+
+    dispatch(apiCallBegan({
+        url,
+        onStart: bugActions.bugRequested.type,
+        onSuccess: bugActions.bugReceived.type,
+        onError: bugActions.bugRequestFailed.type,
+    }));
+};
+
+// post new bug to server
+const addBug = (bug)=>{
+
+    apiCallBegan({
+        url,
+        method:"post",
+        onSuccess:bugActions.addBug.type,
+    })
+
+}
+
+
+// export
 module.exports={
     apiCallBegan,
     apiCallSuccess,

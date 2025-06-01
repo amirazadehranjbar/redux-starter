@@ -5,9 +5,11 @@ const {apiCallBegan, apiCallSuccess, apiCallFailed} = require("../actions/apiAct
 const apiMiddleware = store => next => async action => {
     if (action.type !== apiCallBegan.type) return next(action);
 
-    next(action);
+    const {url, method = "get", data, onSuccess, onError, onStart} = action.payload;
 
-    const {url, method = "get", data, onSuccess, onError} = action.payload;
+    if (onStart) store.dispatch({type: onStart});
+
+    next(action);
 
     try {
         const response = await axios.request({
@@ -24,7 +26,7 @@ const apiMiddleware = store => next => async action => {
 
     } catch (e) {
         // general errors
-        store.dispatch(apiCallFailed(e));
+        store.dispatch(apiCallFailed(e.message));
         // select
         if (onError) store.dispatch({type: onError, payload: e.message ?? e});
     }

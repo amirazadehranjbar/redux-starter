@@ -8,6 +8,7 @@ const bugReducer = createSlice({
     initialState: {
         list:[],
         isLoading:false,
+        isPosting:false,
         lastFetch:null
     },
     reducers: {
@@ -44,6 +45,12 @@ const bugReducer = createSlice({
         },
         bugRequestFailed: (bugs, action) => {
             bugs.isLoading = false;
+        },
+        bugPostStarted:(bugs , action)=>{
+            bugs.isPosting = true;
+        },
+        bugPostedSuccess:(bugs, action)=>{
+
         }
 
     },
